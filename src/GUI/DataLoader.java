@@ -12,7 +12,9 @@ public class DataLoader {
 	public static int[][] world = new int[256][256];
 	public static int[] playersPos;
 	public static int[] playersSprite;
+	public static int[] playersTether;
 	public static ArrayList<Building> buildings;
+	public static HashMap<Integer, Vector<Integer>> tethers;
 	public static int speed;
 	
 	public static void loadWorld(String str) {
@@ -42,10 +44,14 @@ public class DataLoader {
 		JSONObject players = json.getJSONObject("players");
 		JSONArray playerIDs = players.getJSONArray("ids");
 		DataLoader.playersPos = new int[playerIDs.length()*2];
+		DataLoader.playersTether = new int[playerIDs.length()*2];
 		DataLoader.playersSprite = new int[playerIDs.length()];
+		
 		for(int i = 0; i < playerIDs.length(); i ++) {
 			JSONArray pos = players.getJSONArray(playerIDs.getString(i));
 			DataLoader.playersSprite[i] = pos.getInt(2);
+			DataLoader.playersTether[i*2] = pos.getInt(4);
+			DataLoader.playersTether[i*2+1] = pos.getInt(5);
 			if(!(playerIDs.getString(i).equals(id))) {
 				DataLoader.playersPos[i*2] = pos.getInt(0);
 				DataLoader.playersPos[i*2+1] = pos.getInt(1);
@@ -90,6 +96,18 @@ public class DataLoader {
 				v.add(b.getX());
 				v.add(b.getY());
 			}
+		}
+		
+		
+		DataLoader.tethers = new HashMap<Integer, Vector<Integer>>();
+		JSONObject tethers = json.getJSONObject("tethers");
+		for(int i = 0; i < tethers.length(); i ++) {
+			JSONArray tether = tethers.getJSONArray(String.valueOf(i));
+			Vector<Integer> pos = new Vector<Integer>();
+			for(int ii = 0; ii < tether.length(); ii ++) {
+				pos.add(tether.getInt(ii));
+			}
+			DataLoader.tethers.put(Integer.valueOf(i), pos);
 		}
 		
 	}

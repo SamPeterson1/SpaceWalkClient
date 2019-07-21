@@ -57,6 +57,9 @@ public class EventHandler {
 					r = new Request("build");
 					r.addParameter("buildID", "1");
 					r.addParameter("playerID", id);
+				} else if(key == 't') {
+					r = new Request("tether");
+					r.addParameter("id", id);
 				}
 				if(event.getKeyCode() == 16) {
 					r = new Request("sprint");

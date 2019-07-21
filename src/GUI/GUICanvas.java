@@ -9,9 +9,17 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
 
 import Events.GUIEventQueue;
-import ImageLoaders.*;
+import ImageLoaders.BuildingImageLoader;
+import ImageLoaders.PlayerImageLoader;
+import ImageLoaders.ResourceColors;
+import ImageLoaders.TetherImageLoader;
+import ImageLoaders.TileImageLoader;
 
 public class GUICanvas extends Canvas {
 	//TODO: generate new long for serialVersionUID
@@ -21,9 +29,11 @@ public class GUICanvas extends Canvas {
 	private int mouseX = 0;
 	private int mouseY = 0;
 	private Building selected = null;
+	private Image tether;
 	private TileImageLoader TIL;
 	private PlayerImageLoader PIL;
 	private BuildingImageLoader BIL;
+	private TetherImageLoader TEIL;
 	private ResourceColors RC;
 	private Font f1;
 	
@@ -36,6 +46,8 @@ public class GUICanvas extends Canvas {
 		this.PIL = new PlayerImageLoader();
 		this.BIL = new BuildingImageLoader();
 		this.RC = new ResourceColors();
+		this.TEIL = new TetherImageLoader();
+		tether = new ImageIcon(getClass().getResource("/Assets/TetherO2.png")).getImage();
 	}
 	
 	
@@ -74,12 +86,37 @@ public class GUICanvas extends Canvas {
 			}
 		}
 		
+		HashMap<Integer, Vector<Integer>> tethers = DataLoader.tethers;
+		this.TEIL.animate();
+		for(Vector<Integer> tether: tethers.values()) {
+			
+			int[] pos = Camera.worldToScreen(tether.get(0), tether.get(1), 5*32, 1);
+
+			g.drawImage(this.TEIL.getImage(tether.get(2)), pos[0], pos[1], null);
+			
+			int index = 0;
+			for(Integer id: tether) {
+				if(index > 2) {
+					int[] pos2 = Camera.worldToScreen(tethers.get(id).get(0), tethers.get(id).get(1), 5*32, 1);
+					if(Math.abs(pos2[0] - pos[0]) < 5*32 && Math.abs(pos2[1]- pos[1]) < 5*32)
+						g.drawLine(pos[0]+16, pos[1]+16, pos2[0]+16, pos2[1]+16);
+				}
+				index ++;
+			}
+		}
+		
+		
 		for(int i = 0; i < DataLoader.playersPos.length; i += 2) {
+			int[] tether = Camera.worldToScreen(DataLoader.playersTether[i], DataLoader.playersTether[i+1], 32, 1);
 			if(DataLoader.playersPos[i] != -1) {
 				int[] pos = Camera.worldToScreen(DataLoader.playersPos[i], DataLoader.playersPos[i+1], 32, 1);
-				g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), pos[0], pos[1], null);
+				if(DataLoader.playersTether[i] != -1)
+					g.drawLine(pos[0], pos[1], tether[0], tether[1]);
+				g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), pos[0], pos[1], null);	
 			} else {
-				g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), 512, 512, null);
+				if(DataLoader.playersTether[i] != -1)
+					g.drawLine(512, 512, tether[0], tether[1]);
+				g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), 512, 512, null);				
 			}
 		}
 		
