@@ -14,26 +14,31 @@ import java.util.Vector;
 
 import javax.swing.ImageIcon;
 
+import Events.ClickGroup;
+import Events.EventHandler;
 import Events.GUIEventQueue;
+import Events.MouseManager;
 import ImageLoaders.BuildingImageLoader;
+import ImageLoaders.ItemImageLoader;
 import ImageLoaders.PlayerImageLoader;
 import ImageLoaders.ResourceColors;
 import ImageLoaders.TetherImageLoader;
 import ImageLoaders.TileImageLoader;
+import Stubs.Building;
+import Stubs.Refinery;
 
 public class GUICanvas extends Canvas {
 	//TODO: generate new long for serialVersionUID
 	private static final long serialVersionUID = -557652432650828632L;
 	private int width;
 	private int height;
-	private int mouseX = 0;
-	private int mouseY = 0;
 	private Building selected = null;
-	private Image tether;
+	private Image bagBG;
 	private TileImageLoader TIL;
 	private PlayerImageLoader PIL;
 	private BuildingImageLoader BIL;
 	private TetherImageLoader TEIL;
+	private ItemImageLoader IIL;
 	private ResourceColors RC;
 	private Font f1;
 	
@@ -42,118 +47,156 @@ public class GUICanvas extends Canvas {
 		this.setSize(width, height-20);
 		this.width = width;
 		this.height = height;
+		this.IIL = new ItemImageLoader(); 
 		this.TIL = new TileImageLoader();
 		this.PIL = new PlayerImageLoader();
 		this.BIL = new BuildingImageLoader();
 		this.RC = new ResourceColors();
 		this.TEIL = new TetherImageLoader();
-		tether = new ImageIcon(getClass().getResource("/Assets/TetherO2.png")).getImage();
+		this.bagBG = new ImageIcon(getClass().getResource("/Assets/BagBG.png")).getImage();
 	}
 	
 	
 	public void draw(Graphics g2) {
 
-		BufferedImage img = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = (Graphics2D) img.getGraphics();
-		this.clear(g2);	
-		int cx = (Camera.x/32);
-		int cy = (Camera.y/32);
-		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		
-		for(int i = cx - 17; i < cx + 17; i ++) {
-			for(int ii = cy-17; ii < cy + 17; ii ++) {
-				int j = i;
-				int k = ii;
-				int size = DataLoader.world.length;
-				if(j < 0) j += size;
-				if(j >= size) j -= size;
-				if(k < 0) k += size;
-				if(k >= size) k -= size;
-				int[] screen = Camera.worldToScreen(j, k, 32, 32);
-				g.drawImage(this.TIL.getImage(DataLoader.world[j][k]), screen[0], screen[1], null);
-			}
-		}
-		
-		for(Building b: DataLoader.buildings) {
-			int[] pos = Camera.worldToScreen(b.getX(), b.getY(), 32, 32);
-			g.drawImage(this.BIL.getImage(b.getID()), pos[0], pos[1], null);
-			for(Integer[] i: b.getConnected()) {
-				int[] pos2 = Camera.worldToScreen(i[0], i[1], 32, 32);
-				g.drawLine(pos[0], pos[1], pos2[0], pos2[1]);
-			}
-			for(Consumable c: b.getConsumables()) {
-				//System.out.println(c.getName() + ": " + "Amount: " + c.getAmount() + "/" + c.getMax());
-			}
-		}
-		
-		HashMap<Integer, Vector<Integer>> tethers = DataLoader.tethers;
-		this.TEIL.animate();
-		for(Vector<Integer> tether: tethers.values()) {
+		if(DataLoader.ready) {
+			BufferedImage img = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g = (Graphics2D) img.getGraphics();
+			this.clear(g2);	
+			int cx = (Camera.x/32);
+			int cy = (Camera.y/32);
+			g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 			
-			int[] pos = Camera.worldToScreen(tether.get(0), tether.get(1), 5*32, 1);
-
-			g.drawImage(this.TEIL.getImage(tether.get(2)), pos[0], pos[1], null);
-			
-			int index = 0;
-			for(Integer id: tether) {
-				if(index > 2) {
-					int[] pos2 = Camera.worldToScreen(tethers.get(id).get(0), tethers.get(id).get(1), 5*32, 1);
-					if(Math.abs(pos2[0] - pos[0]) < 5*32 && Math.abs(pos2[1]- pos[1]) < 5*32)
-						g.drawLine(pos[0]+16, pos[1]+16, pos2[0]+16, pos2[1]+16);
+			for(int i = cx - 17; i < cx + 17; i ++) {
+				for(int ii = cy-17; ii < cy + 17; ii ++) {
+					int j = i;
+					int k = ii;
+					int size = DataLoader.world.length;
+					if(j < 0) j += size;
+					if(j >= size) j -= size;
+					if(k < 0) k += size;
+					if(k >= size) k -= size;
+					int[] screen = Camera.worldToScreen(j, k, 32, 32);
+					g.drawImage(this.TIL.getImage(DataLoader.world[j][k]), screen[0], screen[1], null);
 				}
-				index ++;
 			}
-		}
-		
-		
-		for(int i = 0; i < DataLoader.playersPos.length; i += 2) {
-			int[] tether = Camera.worldToScreen(DataLoader.playersTether[i], DataLoader.playersTether[i+1], 32, 1);
-			if(DataLoader.playersPos[i] != -1) {
-				int[] pos = Camera.worldToScreen(DataLoader.playersPos[i], DataLoader.playersPos[i+1], 32, 1);
-				if(DataLoader.playersTether[i] != -1)
-					g.drawLine(pos[0], pos[1], tether[0], tether[1]);
-				g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), pos[0], pos[1], null);	
-			} else {
-				if(DataLoader.playersTether[i] != -1)
-					g.drawLine(512, 512, tether[0], tether[1]);
-				g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), 512, 512, null);				
-			}
-		}
-		
-		if(this.selected != null) {
-			int[] pos = Camera.worldToScreen(this.selected.getX(), this.selected.getY(), 32, 32);
-			g.setColor(Color.LIGHT_GRAY);
- 			g.fillRect(pos[0] + 95, pos[1] + 95, 260, 160);
- 			int width = BIL.getImage(this.selected.getID()).getWidth(null);
- 			g.drawLine(pos[0] + 95, pos[1] + 95, width/2 + pos[0], width/2 + pos[1]);
- 			g.setColor(Color.BLACK);
-			g.fillRect(pos[0] + 100, pos[1] + 100, 250, 150);
-			g.setFont(f1);
-			String str = this.selected.isActive() ? "Active" : "Inactive";
-			Color color = this.selected.isActive() ? Color.GREEN : Color.RED;
-			g.setColor(color);
-			g.drawString(str, pos[0]+110, pos[1] + 120);
-			str = this.selected.linked() ? "Connected" : "Disconnected";
-			color = this.selected.linked() ? Color.GREEN : Color.RED;
-			g.setColor(color);
-			g.drawString(str, pos[0]+180, pos[1] + 120);
 			
-			int y = 130 + pos[1];
-			
-			for(Consumable c: this.selected.getConsumables()) {
-				int level = (c.getAmount()*130)/c.getMax();
-				g.setColor(RC.getColor(c.getName()));
-				g.drawString(c.getName(), pos[0] + 250, y + 10);
-				g.fillRect(pos[0] + 110, y, level, 12);
-				g.setColor(Color.GRAY);
-				g.fillRect(pos[0] + 110 + level, y, 130-level, 12);
-				y += 17;
+			for(Building b: DataLoader.buildings) {
+				int[] pos = Camera.worldToScreen(b.getX(), b.getY(), 32, 32);
+				g.drawImage(this.BIL.getImage(b.getID()), pos[0], pos[1], null);
+				for(Integer[] i: b.getConnected()) {
+					int[] pos2 = Camera.worldToScreen(i[0], i[1], 32, 32);
+					g.drawLine(pos[0], pos[1], pos2[0], pos2[1]);
+				}
+				for(Consumable c: b.getConsumables()) {
+					//System.out.println(c.getName() + ": " + "Amount: " + c.getAmount() + "/" + c.getMax());
+				}
 			}
-		}
-		
-		g.dispose();
-		g2.drawImage(img, 0, 0, null);
-		g2.dispose();
+			
+			HashMap<Integer, Vector<Integer>> tethers = DataLoader.tethers;
+			this.TEIL.animate();
+			for(Vector<Integer> tether: tethers.values()) {
+				
+				int[] pos = Camera.worldToScreen(tether.get(0), tether.get(1), 5*32, 1);
+	
+				g.drawImage(this.TEIL.getImage(tether.get(2)), pos[0], pos[1], null);
+				
+				int index = 0;
+				for(Integer id: tether) {
+					if(index > 2) {
+						int[] pos2 = Camera.worldToScreen(tethers.get(id).get(0), tethers.get(id).get(1), 5*32, 1);
+						if(Math.abs(pos2[0] - pos[0]) < 5*32 && Math.abs(pos2[1]- pos[1]) < 5*32)
+							g.drawLine(pos[0]+16, pos[1]+16, pos2[0]+16, pos2[1]+16);
+					}
+					index ++;
+				}
+			}
+			
+			for(Refinery r: DataLoader.refineries) {
+				int[] pos = Camera.worldToScreen(r.x, r.y, 32, 32);
+				g.fillRect(pos[0], pos[1], 100, 100);
+				if(Camera.inBounds(EventHandler.mouseX, EventHandler.mouseY, r.x, r.y, 64, 64)) {
+					System.out.println("YEET!!!");
+				} else {
+					System.out.println(Refinery.selectedX + " " + Refinery.selectedY + " " + r.x + " " + r.y);
+				}
+			}
+			
+			for(int i = 0; i < DataLoader.playersPos.length; i += 2) {
+				int[] tether = Camera.worldToScreen(DataLoader.playersTether[i], DataLoader.playersTether[i+1], 32, 1);
+				if(DataLoader.playersPos[i] != -1) {
+					int[] pos = Camera.worldToScreen(DataLoader.playersPos[i], DataLoader.playersPos[i+1], 32, 1);
+					if(DataLoader.playersTether[i] != -1)
+						g.drawLine(pos[0], pos[1], tether[0], tether[1]);
+					g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), pos[0], pos[1], null);	
+				} else {
+					if(DataLoader.playersTether[i] != -1)
+						g.drawLine(512, 512, tether[0], tether[1]);
+					g.drawImage(this.PIL.getImage(DataLoader.playersSprite[i/2]), 512, 512, null);				
+					int index = 0;
+					for(Consumable c: DataLoader.playerResources.values()) {
+						g.setColor(Color.LIGHT_GRAY);
+						g.fillRect(20, index*25 + 10, 130, 20);
+						g.setColor(this.RC.getColor(c.getName()));
+						g.drawString(c.getName(), 160, index*25 + 25);
+						int prog = 130*c.getAmount()/c.getMax();
+						g.fillRect(20, index*25 + 10, prog, 20);
+						index ++;
+					}
+				}
+			}
+			
+			if(DataLoader.inBag) {
+				g.drawImage(bagBG, 895, 785, this.getWidth()-895, this.getHeight()-763, null);
+				g.setColor(Color.BLACK);
+				g.fillRect(890, 780, 130, 5);
+				g.fillRect(890, 780, 5, 240);
+				g.setColor(new Color(0, 0, 0, 100));
+				for(int i = 0; i < 8; i ++) {
+					int x = i%2;
+					int y = i/2;
+					g.fillRect(x*55 + 905, y*55 + 795, 50, 50);
+					g.drawImage(this.IIL.getImage(DataLoader.bag[i]), x*55 + 905, y*55 + 797, null);
+				}
+			}
+			
+			if(MouseManager.groupHandlers.containsKey(ClickGroup.BUILDING)) {
+				if(MouseManager.groupHandlers.get(ClickGroup.BUILDING).getSelected() != null) {
+					this.selected = (Building) MouseManager.groupHandlers.get(ClickGroup.BUILDING).getSelected();
+					int[] pos = Camera.worldToScreen(this.selected.getX(), this.selected.getY(), 32, 32);
+					g.setColor(Color.LIGHT_GRAY);
+		 			g.fillRect(pos[0] + 95, pos[1] + 95, 260, 160);
+		 			int width = BIL.getImage(this.selected.getID()).getWidth(null);
+		 			g.drawLine(pos[0] + 95, pos[1] + 95, width/2 + pos[0], width/2 + pos[1]);
+		 			g.setColor(Color.BLACK);
+					g.fillRect(pos[0] + 100, pos[1] + 100, 250, 150);
+					g.setFont(f1);
+					String str = this.selected.isActive() ? "Active" : "Inactive";
+					Color color = this.selected.isActive() ? Color.GREEN : Color.RED;
+					g.setColor(color);
+					g.drawString(str, pos[0]+110, pos[1] + 120);
+					str = this.selected.linked() ? "Connected" : "Disconnected";
+					color = this.selected.linked() ? Color.GREEN : Color.RED;
+					g.setColor(color);
+					g.drawString(str, pos[0]+180, pos[1] + 120);
+					
+					int y = 130 + pos[1];
+					
+					for(Consumable c: this.selected.getConsumables()) {
+						int level = (c.getAmount()*130)/c.getMax();
+						g.setColor(RC.getColor(c.getName()));
+						g.drawString(c.getName(), pos[0] + 250, y + 10);
+						g.fillRect(pos[0] + 110, y, level, 12);
+						g.setColor(Color.GRAY);
+						g.fillRect(pos[0] + 110 + level, y, 130-level, 12);
+						y += 17;
+					}
+				}	
+			}
+				g.dispose();
+				g2.drawImage(img, 0, 0, null);
+				g2.dispose();
+			}
 	}
 	
 	public void setSelected(Building selected) {

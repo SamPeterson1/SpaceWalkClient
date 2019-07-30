@@ -1,24 +1,44 @@
-package GUI;
+package Stubs;
 
+import java.awt.Image;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-public class Building {
+import Events.ClickGroup;
+import Events.Clickable;
+import Events.MouseClick;
+import Events.MouseManager;
+import Events.Request;
+import GUI.Consumable;
+import ImageLoaders.BuildingImageLoader;
+
+public class Building implements Clickable{
 	
 	//private Image img;
+	private static BuildingImageLoader loader = new BuildingImageLoader();
+	private Image img;
+	private int width;
+	private int height;
 	private HashMap <String, Consumable> consumables;
 	private ArrayList<Integer[]> connected;
 	private boolean active;
 	private boolean linked;
+	private boolean selected;
 	private int ID;
 	private int x;
 	private int y;
 	
 	public Building(int ID) {
+		
 		this.ID = ID;
 		this.connected = new ArrayList<Integer[]>();
 		this.consumables = new HashMap<String, Consumable>();
+		this.img = Building.loader.getImage(ID);
+		this.width = img.getWidth(null);
+		this.height = img.getHeight(null);
+		MouseManager.addClickable(this);
+		
 	}
 	
 	public void setConsumables(HashMap<String, Consumable> consumables) {
@@ -77,4 +97,21 @@ public class Building {
 	public Collection<Consumable> getConsumables() {
 		return this.consumables.values();
 	}
+	
+	@Override	
+	public MouseClick getMouseButton() {return MouseClick.LEFT;}
+	@Override
+	public int getWidth() {return this.width;}
+	@Override
+	public int getHeight() {return this.height;}
+	@Override
+	public ClickGroup getGroup() {return ClickGroup.BUILDING;}
+	@Override
+	public boolean doesReset() {return true;}
+	@Override
+	public Request onClick() {return null;}
+	@Override
+	public boolean selected() {return this.selected;}
+	@Override
+	public void setSelected(boolean selected) {this.selected = selected;}
 }

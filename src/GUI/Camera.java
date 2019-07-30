@@ -70,4 +70,11 @@ public class Camera {
 		int[] retVal = {dx, dy};
 		return retVal;
 	}
+	
+	public static boolean inBounds(int x1, int y1, int x2, int y2, int width, int height) {
+		int[] screenPos = Camera.worldToScreen(x2, y2, 32, 32);
+		
+		return (x1 >= screenPos[0] && x1 < screenPos[0] + width 
+				&& y1 >= screenPos[1] && y1 < screenPos[1] + width);
+	}
 }

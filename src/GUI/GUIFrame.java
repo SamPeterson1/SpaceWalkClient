@@ -18,6 +18,7 @@ public class GUIFrame {
 	private int height;
 	private JFrame frame;
 	private EventHandler eh;
+	private long requestTime;
 	SecureRandom rand;
 	int n;
 	String id;
@@ -33,6 +34,7 @@ public class GUIFrame {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         rand = new SecureRandom();
         n =	rand.nextInt(1) + 2;
+        this.requestTime = System.currentTimeMillis();
 	}
 	
 	public static void newFrame(int width, int height, String title, GUICanvas c) {
@@ -66,6 +68,11 @@ public class GUIFrame {
 	public void start(int WIDTH, int HEIGHT, Client client) {
 	    boolean running=true;
 	    boolean iterateNext = false;
+	    Request data1 = new Request("data");
+    	data1.addParameter("id", id);
+    	client.write(data1.toString());
+    	String line1 = client.read();
+	    if(line1.startsWith("{"))
 	    while(running) {
 		    BufferStrategy bs = canvas.getBufferStrategy();
 		    if(bs==null){
@@ -75,31 +82,24 @@ public class GUIFrame {
 		   	 	iterateNext = true;
 		    }
 		    if(iterateNext) {
-
-		    	//System.out.println("I LIVED");
-		    	i ++;
-		    	if(i == 100) { 
-			    	Request edit = new Request("edit");
-			    	edit.addParameter("x", String.valueOf(rand.nextInt(32)));
-			    	edit.addParameter("y", String.valueOf(rand.nextInt(32)));
-			    	edit.addParameter("id", "2");
-			    	client.write(edit.toString());
-			    	i = 0;
-		    	}
 		    	
-		    	Request data = new Request("data");
-		    	data.addParameter("id", id);
-		    	client.write(data.toString());
-		    	String line = client.read();
-			    if(line.startsWith("{"))
-			    	DataLoader.load(line, id);
+		    	String line;
+		    	while ((line = client.nonBlockRead()) != "") {
+				    if(line.startsWith("{"))
+				    	DataLoader.load(line, id);
+		    	}
 		    	
 			    //System.out.println("I LIVED");
 		    	Graphics2D g = (Graphics2D) bs.getDrawGraphics();
 		    	
 		    	//String msg = client.read();
 		    	
-				client.write(eh.handleEvents(id));
+		    	String event = eh.handleEvents(id);
+		    	if(!event.equals("")) {
+		    		System.out.println("ree" + event);
+		    		client.write(event);
+					
+		    	}
 			    Main.wait(Main.LOOP_SPEED_MS);
 			    bs.show();
 			    canvas.draw(g);

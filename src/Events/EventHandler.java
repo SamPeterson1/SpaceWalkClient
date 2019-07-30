@@ -2,19 +2,20 @@ package Events;
 
 import java.util.Vector;
 
-import GUI.Building;
 import GUI.Camera;
 import GUI.DataLoader;
 import GUI.GUICanvas;
 import ImageLoaders.BuildingImageLoader;
+import Stubs.Building;
+import Stubs.Refinery;
 
 public class EventHandler {
 	
 	GUIEventQueue queue;
 	GUICanvas canvas;
 	BuildingImageLoader BIL;
-	int mouseX = 0;
-	int mouseY = 0;
+	public static int mouseX = 0;
+	public static int mouseY = 0;
 	
 	public EventHandler(GUIEventQueue queue, GUICanvas canvas) {
 		this.queue = queue;
@@ -52,13 +53,22 @@ public class EventHandler {
 				} else if(key == 'g') {
 					r = new Request("build");
 					r.addParameter("buildID", "2");
-					r.addParameter("playerID", id);
+					r.addParameter("id", id);
 				} else if(key == 'h') {
 					r = new Request("build");
 					r.addParameter("buildID", "1");
-					r.addParameter("playerID", id);
+					r.addParameter("id", id);
 				} else if(key == 't') {
 					r = new Request("tether");
+					r.addParameter("id", id);
+				} else if(key == 'p') {
+					r = new Request("refinery");
+					r.addParameter("id", id);
+				} else if(key == 'b') {
+					r = new Request("toggleBag");
+					r.addParameter("id", id);
+				} else if(key == 'i') {
+					r = new Request("harvest");
 					r.addParameter("id", id);
 				}
 				if(event.getKeyCode() == 16) {
@@ -73,31 +83,23 @@ public class EventHandler {
 				}
 			} else if(event.getType() == GUIEvent.EVENT_MOUSE_BUTTON_PRESS) {
 				if(event.isMouseRightButton()) {
-					this.mouseX = event.getMouseX();
-					this.mouseY = event.getMouseY();
+					MouseManager.handleClick(event.getMouseX(), event.getMouseY(), MouseClick.RIGHT);
 				} else if(event.isMouseLeftButton()) {
-					int[] pos = Camera.screenToWorld(event.getMouseX(), event.getMouseY());
-					for(Building b: DataLoader.buildings) {
-						if(Math.abs(pos[0] - b.getX()) < this.BIL.getImage(b.getID()).getWidth(null)/32 && Math.abs(pos[1] - b.getY()) < this.BIL.getImage(b.getID()).getHeight(null)/32) {
-							r = new Request("link");
-							r.addParameter("x", String.valueOf(b.getX()));
-							r.addParameter("y", String.valueOf(b.getY()));
-							System.out.println("YEETTTTTT");
-						}
-					}
+					MouseManager.handleClick(event.getMouseX(), event.getMouseY(), MouseClick.LEFT);
 				}
 			}
 		}
 		
 		canvas.setSelected(null);
 		int[] pos = Camera.screenToWorld(this.mouseX, this.mouseY);
-		for(Building b: DataLoader.buildings) {
-			if(Math.abs(pos[0] - b.getX()) < this.BIL.getImage(b.getID()).getWidth(null)/32 && Math.abs(pos[1] - b.getY()) < this.BIL.getImage(b.getID()).getHeight(null)/32) {
-				canvas.setSelected(b);
-				break;
+		if(DataLoader.ready) {
+			for(Building b: DataLoader.buildings) {
+				if(Math.abs(pos[0] - b.getX()) < this.BIL.getImage(b.getID()).getWidth(null)/32 && Math.abs(pos[1] - b.getY()) < this.BIL.getImage(b.getID()).getHeight(null)/32) {
+					canvas.setSelected(b);
+					break;
+				}
 			}
 		}
-		
 		return r.toString();
 	}
 	

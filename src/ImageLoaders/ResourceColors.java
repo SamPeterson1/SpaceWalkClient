@@ -11,6 +11,8 @@ public class ResourceColors {
 		this.colors = new HashMap<String, Color>();
 		this.colors.put("Oxygen", Color.CYAN);
 		this.colors.put("Power", Color.YELLOW);
+		this.colors.put("Health", Color.RED);
+		this.colors.put("Wood", Color.ORANGE);
 	}
 	
 	public Color getColor(String name) {
