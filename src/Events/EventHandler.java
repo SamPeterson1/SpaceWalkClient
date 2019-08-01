@@ -6,6 +6,7 @@ import GUI.Camera;
 import GUI.DataLoader;
 import GUI.GUICanvas;
 import ImageLoaders.BuildingImageLoader;
+import Net.Request;
 import Stubs.Building;
 import Stubs.Refinery;
 
@@ -83,9 +84,9 @@ public class EventHandler {
 				}
 			} else if(event.getType() == GUIEvent.EVENT_MOUSE_BUTTON_PRESS) {
 				if(event.isMouseRightButton()) {
-					MouseManager.handleClick(event.getMouseX(), event.getMouseY(), MouseClick.RIGHT);
+					return MouseManager.handleClick(event.getMouseX(), event.getMouseY(), MouseClick.RIGHT);
 				} else if(event.isMouseLeftButton()) {
-					MouseManager.handleClick(event.getMouseX(), event.getMouseY(), MouseClick.LEFT);
+					return MouseManager.handleClick(event.getMouseX(), event.getMouseY(), MouseClick.LEFT);
 				}
 			}
 		}

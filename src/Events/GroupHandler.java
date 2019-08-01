@@ -1,44 +1,79 @@
 package Events;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import GUI.Camera;
+import Net.Request;
 
 public class GroupHandler {
 	
 	ClickGroup group;
 	ArrayList<Clickable> clickable = new ArrayList<Clickable>();
-	Clickable selected = null;
+	HashMap<MouseClick, Clickable> selected;
+	HashMap<MouseClick, Integer[]> mousePos;
 	
 	public GroupHandler(ClickGroup group) {
 		this.group = group;
+		this.selected = new HashMap<MouseClick, Clickable>();
+		this.mousePos = new HashMap<MouseClick, Integer[]>();
 	}
 	
-	public Clickable getSelected() {
-		return this.selected;
+	public void eraseClickable() {
+		this.clickable = new ArrayList<Clickable>();
+		this.selected = new HashMap<MouseClick, Clickable>();
+	}
+	
+	public Clickable getSelected(MouseClick type) {
+		return this.selected.get(type);
 	}
 	
 	public void addClickable(Clickable clickable) {
 		this.clickable.add(clickable);
 	}
 	
-	public void handleClick(int mouseX, int mouseY, MouseClick type) {
+	public void reSelect() {
+		for(MouseClick type: mousePos.keySet()) {
+			Integer[] pos = mousePos.get(type);
+			for(Clickable c: this.clickable) {
+				if(Camera.inBounds(pos[0], pos[1], c.getX(), c.getY(), c.getWidth(), c.getHeight())) {
+					if(c.getMouseButton().contains(type)) {
+						c.setSelected(true, type);
+						this.selected.put(type, c);
+						break;
+					}
+				}
+			}
+		}
+	}
+	
+	public Request handleClick(int mouseX, int mouseY, MouseClick type) {
 		
-		if(this.selected != null) {
-			if(this.selected.doesReset()) {
-				this.selected = null;
+		Integer[] pos = {mouseX, mouseY};
+		this.mousePos.put(type, pos);
+		
+		if(this.selected.get(type) != null) {
+			if(this.selected.get(type).doesReset(type)) {
+				this.selected.put(type, null);
 			}
 		}
 		
 		for(Clickable c: this.clickable) {
 			if(Camera.inBounds(mouseX, mouseY, c.getX(), c.getY(), c.getWidth(), c.getHeight())) {
-				if(c.getMouseButton() == type) {
-					c.setSelected(true);
-					this.selected = c;
-					break;
+				if(c.getMouseButton().contains(type)) {
+					c.setSelected(true, type);
+					this.selected.put(type, c);
+					return c.onClick(type, mouseX, mouseY);
 				}
 			}
 		}
 		
+		for(Clickable c: this.clickable) {
+			c.onReset(type);
+		}
+		
+		return null;
 	}
+	
+	
 }

@@ -1,4 +1,4 @@
-package GUI;
+package Net;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -15,9 +15,7 @@ public class Client {
 	private BufferedWriter bufferedWriter;
 	private InputStream inputStream;
 	private OutputStream outputStream;
-	
-	public Client() {
-	}
+	private String ID;
 
 	public void connect(String hostname, int hostport) {
 		try {
@@ -33,6 +31,14 @@ public class Client {
 		}
 	}
 
+	public void setID(String ID) {
+		this.ID = ID;
+	}
+	
+	public String getID() {
+		return this.ID;
+	}
+	
 	public void disconnect() {
 		if (this.clientSocket != null) {
 			try {

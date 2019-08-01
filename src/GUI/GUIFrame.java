@@ -8,7 +8,9 @@ import java.security.SecureRandom;
 import javax.swing.JFrame;
 
 import Events.EventHandler;
-import Events.Request;
+import Net.Client;
+import Net.Receiver;
+import Net.Request;
 
 
 public class GUIFrame {
@@ -18,7 +20,7 @@ public class GUIFrame {
 	private int height;
 	private JFrame frame;
 	private EventHandler eh;
-	private long requestTime;
+	private Receiver receiver;
 	SecureRandom rand;
 	int n;
 	String id;
@@ -34,7 +36,6 @@ public class GUIFrame {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         rand = new SecureRandom();
         n =	rand.nextInt(1) + 2;
-        this.requestTime = System.currentTimeMillis();
 	}
 	
 	public static void newFrame(int width, int height, String title, GUICanvas c) {
@@ -68,11 +69,8 @@ public class GUIFrame {
 	public void start(int WIDTH, int HEIGHT, Client client) {
 	    boolean running=true;
 	    boolean iterateNext = false;
-	    Request data1 = new Request("data");
-    	data1.addParameter("id", id);
-    	client.write(data1.toString());
-    	String line1 = client.read();
-	    if(line1.startsWith("{"))
+	    this.receiver = new Receiver(client.read(), id);
+	    client.write("edit x:" + rand.nextInt(16) + " y:" + rand.nextInt(16) + " id:2");
 	    while(running) {
 		    BufferStrategy bs = canvas.getBufferStrategy();
 		    if(bs==null){
@@ -85,8 +83,11 @@ public class GUIFrame {
 		    	
 		    	String line;
 		    	while ((line = client.nonBlockRead()) != "") {
-				    if(line.startsWith("{"))
+				    if(line.startsWith("{")) {
 				    	DataLoader.load(line, id);
+				    } else {
+				    	this.receiver.update(Request.parseString(line));
+				    }
 		    	}
 		    	
 			    //System.out.println("I LIVED");

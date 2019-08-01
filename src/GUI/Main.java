@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 
 import Events.EventHandler;
 import Events.GUIEventQueue;
+import Net.Client;
 
 
 public class Main {
@@ -28,6 +29,7 @@ public class Main {
 		
 		String id = client.read();
 		DataLoader.loadWorld(client.read());
+		client.setID(id);
 		uiFrame.setID(id);
 		
 		uiFrame.start(uiFrame.getWidth(), uiFrame.getHeight(), client);        

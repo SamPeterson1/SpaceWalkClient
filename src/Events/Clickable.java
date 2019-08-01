@@ -1,21 +1,27 @@
 package Events;
 
+import java.util.Set;
+
+import Net.Request;
+
 public interface Clickable {
 	
-	MouseClick getMouseButton();
+	Set<MouseClick> getMouseButton();
 	
 	int getWidth();
 	int getHeight();
 	
 	ClickGroup getGroup();
+
+	boolean doesReset(MouseClick type);
 	
-	boolean doesReset();
+	Request onClick(MouseClick type, int x, int y);
 	
-	Request onClick();
+	boolean selected(MouseClick type);
 	
-	boolean selected();
+	void setSelected(boolean selected, MouseClick type);
 	
-	void setSelected(boolean selected);
+	void onReset(MouseClick type);
 	
 	int getX();
 	int getY();

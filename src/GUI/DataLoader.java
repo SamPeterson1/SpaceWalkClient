@@ -143,5 +143,7 @@ public class DataLoader {
 			JSONArray dat = refineries.getJSONArray(String.valueOf(i));
 			DataLoader.refineries.add(new Refinery(dat.getInt(0), dat.getInt(1), dat.getInt(4), dat.getInt(3), dat.getString(2), dat.getInt(5)));
 		}
+		
+		MouseManager.reSelect();
 	}
 }

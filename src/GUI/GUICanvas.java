@@ -17,6 +17,7 @@ import javax.swing.ImageIcon;
 import Events.ClickGroup;
 import Events.EventHandler;
 import Events.GUIEventQueue;
+import Events.MouseClick;
 import Events.MouseManager;
 import ImageLoaders.BuildingImageLoader;
 import ImageLoaders.ItemImageLoader;
@@ -24,6 +25,7 @@ import ImageLoaders.PlayerImageLoader;
 import ImageLoaders.ResourceColors;
 import ImageLoaders.TetherImageLoader;
 import ImageLoaders.TileImageLoader;
+import Net.Receiver;
 import Stubs.Building;
 import Stubs.Refinery;
 
@@ -71,13 +73,13 @@ public class GUICanvas extends Canvas {
 				for(int ii = cy-17; ii < cy + 17; ii ++) {
 					int j = i;
 					int k = ii;
-					int size = DataLoader.world.length;
+					int size = Receiver.world.length;
 					if(j < 0) j += size;
 					if(j >= size) j -= size;
 					if(k < 0) k += size;
 					if(k >= size) k -= size;
 					int[] screen = Camera.worldToScreen(j, k, 32, 32);
-					g.drawImage(this.TIL.getImage(DataLoader.world[j][k]), screen[0], screen[1], null);
+					g.drawImage(this.TIL.getImage(Receiver.world[j][k]), screen[0], screen[1], null);
 				}
 			}
 			
@@ -90,6 +92,9 @@ public class GUICanvas extends Canvas {
 				}
 				for(Consumable c: b.getConsumables()) {
 					//System.out.println(c.getName() + ": " + "Amount: " + c.getAmount() + "/" + c.getMax());
+				}
+				if(b.selected(MouseClick.RIGHT)) {
+					//g.fill
 				}
 			}
 			
@@ -161,8 +166,8 @@ public class GUICanvas extends Canvas {
 			}
 			
 			if(MouseManager.groupHandlers.containsKey(ClickGroup.BUILDING)) {
-				if(MouseManager.groupHandlers.get(ClickGroup.BUILDING).getSelected() != null) {
-					this.selected = (Building) MouseManager.groupHandlers.get(ClickGroup.BUILDING).getSelected();
+				if(MouseManager.groupHandlers.get(ClickGroup.BUILDING).getSelected(MouseClick.LEFT) != null) {
+					this.selected = (Building) MouseManager.groupHandlers.get(ClickGroup.BUILDING).getSelected(MouseClick.LEFT);
 					int[] pos = Camera.worldToScreen(this.selected.getX(), this.selected.getY(), 32, 32);
 					g.setColor(Color.LIGHT_GRAY);
 		 			g.fillRect(pos[0] + 95, pos[1] + 95, 260, 160);

@@ -1,4 +1,4 @@
-package Events;
+package Net;
 
 import java.util.HashMap;
 
@@ -10,6 +10,10 @@ public class Request {
 	public Request(String message) {
 		this.message = message;
 		this.parameters = new HashMap<String, String>();
+	}
+	
+	public void addParameter(String name, int value) {
+		this.parameters.put(name, String.valueOf(value));
 	}
 	
 	public void addParameter(String name, String value) {
